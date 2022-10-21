@@ -3,7 +3,6 @@ package com.example.ProjectBoot1.dao;
 import com.example.ProjectBoot1.model.User;
 import org.springframework.stereotype.Repository;
 
-
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import java.util.List;
@@ -23,7 +22,7 @@ public class UserDaoImpl implements UserDao {
 
     @Override
 
-    public User getUserById(int id) {
+    public User getUserById(long id) {
         return entityManager.find(User.class, id);
 
     }
@@ -36,17 +35,21 @@ public class UserDaoImpl implements UserDao {
 
     @Override
     public void updateUser(User user) {
-        User userToBeUpdated = entityManager.find(User.class, user.getId());
-
-        userToBeUpdated.setName(user.getName());
-        userToBeUpdated.setAge((user.getAge()));
+        entityManager.merge(user);
 
     }
 
     @Override
-    public void deleteUser(int id) {
+    public void deleteUser(long id) {
         User user = entityManager.find(User.class, id);
         entityManager.remove(user);
         entityManager.flush();
+    }
+
+    @Override
+    public User getUserByName(String name) {
+        return entityManager.createQuery("SELECT u FROM User u where u.name = :name", User.class)
+                .setParameter("name", name)
+                .getSingleResult();
     }
 }
