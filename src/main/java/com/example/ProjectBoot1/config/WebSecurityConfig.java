@@ -1,6 +1,7 @@
 package com.example.ProjectBoot1.config;
 
 import com.example.ProjectBoot1.service.UserServiceImpl;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
@@ -18,32 +19,40 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     private final LoginSuccessHandler loginSuccessHandler;
     private final UserServiceImpl userService;
 
+    @Autowired
     public WebSecurityConfig(LoginSuccessHandler loginSuccessHandler, @Lazy UserServiceImpl userService) {
         this.loginSuccessHandler = loginSuccessHandler;
         this.userService = userService;
     }
 
-
-    @Bean
-    @Lazy
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder(12);
-    }
-
     @Override
-    protected void configure(HttpSecurity httpSecurity) throws Exception {
-        httpSecurity
+    protected void configure(HttpSecurity http) throws Exception {
+        http
+                .csrf().disable()
                 .authorizeRequests()
-                .antMatchers("/").permitAll()
+                .antMatchers("/api/**").permitAll()
                 .antMatchers("/admin/**").hasRole("ADMIN")
-                .antMatchers("/user/**").hasAnyRole("USER", "ADMIN")
+                .antMatchers("/user/**").hasAnyRole("ADMIN", "USER")
+                .antMatchers("/login").permitAll()
                 .anyRequest().authenticated()
                 .and()
-                .formLogin().successHandler(new LoginSuccessHandler())
+                .formLogin()
+                .loginPage("/login")
+                .successHandler(loginSuccessHandler)
+                .loginProcessingUrl("/login")
+                .usernameParameter("login")
+                .passwordParameter("password")
                 .permitAll()
                 .and()
                 .logout()
-                .permitAll();
+                .permitAll()
+                .and().csrf().disable();
+    }
+
+    @Bean
+    @Lazy
+    protected PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder(12);
     }
 
     @Bean
@@ -53,4 +62,5 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         authenticationProvider.setUserDetailsService(userService);
         return authenticationProvider;
     }
+
 }

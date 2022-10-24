@@ -6,15 +6,10 @@ import com.example.ProjectBoot1.model.User;
 import java.util.List;
 
 public interface UserService {
-    void addUser(User user, long[] listRoles);
-
-    List<User> getUsers();
-
-    User getUserById(long id);
-
+    List<User> getAllUsers();
+    User getUserById(Long id);
+    void addUser(User user);
+    void deleteUser(Long id);
+    void updateUser(User user, Long id);
     User getUserByName(String name);
-
-    void updateUser(User user, long[] roleId);
-
-    void deleteUser(long id);
 }

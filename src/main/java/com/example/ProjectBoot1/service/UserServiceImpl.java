@@ -2,10 +2,8 @@ package com.example.ProjectBoot1.service;
 
 import com.example.ProjectBoot1.dao.RoleDao;
 import com.example.ProjectBoot1.dao.UserDao;
-import com.example.ProjectBoot1.model.Role;
 import com.example.ProjectBoot1.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -13,65 +11,58 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashSet;
+
 import java.util.List;
-import java.util.Set;
 
 
 @Service
 public class UserServiceImpl implements UserService, UserDetailsService {
 
-    public final UserDao userDao;
+    private final UserDao userDao;
     private final RoleDao roleDao;
     private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public UserServiceImpl(UserDao userDao, RoleDao roleDao, @Lazy PasswordEncoder passwordEncoder) {
+    public UserServiceImpl(UserDao userDao, RoleDao roleDao, PasswordEncoder passwordEncoder) {
         this.userDao = userDao;
         this.roleDao = roleDao;
         this.passwordEncoder = passwordEncoder;
     }
 
+
+    @Transactional(readOnly = true)
     @Override
-    @Transactional
-    public void addUser(User user, long[] listRoles) {
-        Set<Role> rolesSet = new HashSet<>();
-        for (long listRole : listRoles) {
-            rolesSet.add(roleDao.getRoleById(listRole));
-        }
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        user.setRoles(rolesSet);
-        userDao.addUser(user);
+    public List<User> getAllUsers() {
+        return userDao.getAllUsers();
     }
 
-    @Override
     @Transactional(readOnly = true)
-    public List<User> getUsers() {
-        return userDao.getUsers();
-    }
-
     @Override
-    @Transactional(readOnly = true)
-    public User getUserById(long id) {
+    public User getUserById(Long id) {
         return userDao.getUserById(id);
     }
 
-    @Override
     @Transactional
-    public void updateUser(User user, long[] roleId) {
-        Set<Role> rolesSet = new HashSet<>();
-        for (long l : roleId) {
-            rolesSet.add(roleDao.getRoleById(l));
-        }
+    @Override
+    public void addUser(User user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        user.setRoles(rolesSet);
-        userDao.updateUser(user);
+        userDao.addUser(user);
     }
 
-    @Override
     @Transactional
-    public void deleteUser(long id) {
+    @Override
+    public void deleteUser(Long id) {
         userDao.deleteUser(id);
+    }
+
+    @Transactional
+    @Override
+    public void updateUser(User user, Long id) {
+        user.setId(id);
+        user.setPassword(user.getPassword() != null &&
+                !user.getPassword().trim().equals("") ? passwordEncoder.encode(user.getPassword()) :
+                userDao.getUserById(id).getPassword());
+        userDao.updateUser(user);
     }
 
     @Override
@@ -81,10 +72,10 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     }
 
     @Override
-    public UserDetails loadUserByUsername(String name) throws UsernameNotFoundException {
-        User user = getUserByName(name);
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        User user = getUserByName(username);
         if (user == null) {
-            throw new UsernameNotFoundException("Invalid User");
+            throw new UsernameNotFoundException(String.format("User '%s' not found", username));
         }
         return user;
     }

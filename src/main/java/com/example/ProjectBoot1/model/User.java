@@ -16,40 +16,65 @@ public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
 
+    @Column
     private String name;
+
+    @Column
     private String lastname;
-    private long age;
-    private String email;
+
+    @Column
+    private Integer age;
+
+    @Column
     private String password;
+
+    @Column
+    private String email;
 
     @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.REFRESH)
     @JoinTable(
             name = "users_roles",
             joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "role_id"))
+            inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
     @OnDelete(action = OnDeleteAction.CASCADE)
     private Set<Role> roles;
 
+    public Set<Role> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(Set<Role> roles) {
+        this.roles = roles;
+    }
+
+    public String getPasswordUser() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
 
     public User() {
     }
 
-    public User(String name, String lastname, long age, String email) {
+    public User(Long id, String name, String lastname, Integer age,String email, Set<Role> roles) {
+        this.id = id;
         this.name = name;
         this.lastname = lastname;
         this.age = age;
         this.email = email;
-
+        this.roles = roles;
     }
 
-
-    public long getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -65,15 +90,15 @@ public class User implements UserDetails {
         return lastname;
     }
 
-    public void setLastname(String lastName) {
-        this.lastname = lastName;
+    public void setLastname(String lastname) {
+        this.lastname = lastname;
     }
 
-    public long getAge() {
+    public Integer getAge() {
         return age;
     }
 
-    public void setAge(long age) {
+    public void setAge(Integer age) {
         this.age = age;
     }
 
@@ -85,35 +110,15 @@ public class User implements UserDetails {
         this.email = email;
     }
 
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public String getUserPassword() {
-        return password;
-    }
-
-    public Set<Role> getRoles() {
-        return roles;
-    }
-
-    public void setRoles(Set<Role> roles) {
-        this.roles = roles;
+    public String getRole() {
+        return getRoles().toString().replaceAll("[,\\[\\]]" , "").
+                replaceAll("ROLE_","");
     }
 
     @Override
     public String toString() {
-        return "User{" +
-                "id=" + id +
-                ", firstName='" + name + '\'' +
-                ", lastName='" + lastname + '\'' +
-                ", age=" + age +
-                ", email='" + email + '\'' +
-                ", password='" + password + '\'' +
-                ", roles=" + roles +
-                '}';
+        return name + " " + lastname + " " + age;
     }
-
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -122,7 +127,7 @@ public class User implements UserDetails {
 
     @Override
     public String getPassword() {
-        return password;
+        return getPasswordUser();
     }
 
     @Override
