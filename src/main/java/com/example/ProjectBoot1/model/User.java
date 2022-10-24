@@ -33,7 +33,12 @@ public class User implements UserDetails {
     @Column
     private String email;
 
-    @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.REFRESH)
+    @ManyToMany(fetch = FetchType.EAGER,
+            cascade = {
+                    CascadeType.PERSIST,
+                    CascadeType.MERGE
+            }
+    )
     @JoinTable(
             name = "users_roles",
             joinColumns = @JoinColumn(name = "user_id"),
@@ -61,7 +66,7 @@ public class User implements UserDetails {
     public User() {
     }
 
-    public User(Long id, String name, String lastname, Integer age,String email, Set<Role> roles) {
+    public User(Long id, String name, String lastname, Integer age, String email, Set<Role> roles) {
         this.id = id;
         this.name = name;
         this.lastname = lastname;
@@ -111,8 +116,8 @@ public class User implements UserDetails {
     }
 
     public String getRole() {
-        return getRoles().toString().replaceAll("[,\\[\\]]" , "").
-                replaceAll("ROLE_","");
+        return getRoles().toString().replaceAll("[,\\[\\]]", "").
+                replaceAll("ROLE_", "");
     }
 
     @Override
